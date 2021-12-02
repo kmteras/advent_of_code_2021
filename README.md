@@ -1,21 +1,7 @@
-# Day01
+# Advent of Code 2021
 
-**TODO: Add description**
+## Running
 
-## Installation
+Run `mix day 01p1` to run the solution for day 1 part 1.
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `day_01` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:day_01, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/day_01](https://hexdocs.pm/day_01).
-
+To use the example for the day run it with `-e` like `mix day 01p1 -e`
