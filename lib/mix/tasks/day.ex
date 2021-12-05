@@ -25,6 +25,6 @@ defmodule Mix.Tasks.Day do
     end
 
     module = Module.concat(["Day#{String.upcase(day)}"])
-    IO.puts(apply(module, :solve, ["input/day#{day_nr}#{example_suffix}.txt"]))
+    IO.inspect(apply(module, :solve, ["input/day#{day_nr}#{example_suffix}.txt"]))
   end
 end
