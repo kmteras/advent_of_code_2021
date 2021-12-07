@@ -74,17 +74,16 @@ defmodule Day03P2 do
       head
       |> Enum.reduce([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0], &find_most_common_bit/2)
 
-    bits =
-      bits
-      |> Enum.map(
-           fn count ->
-             if count >= amount / 2 do
-               1
-             else
-               0
-             end
+    bits
+    |> Enum.map(
+         fn count ->
+           if count >= amount / 2 do
+             1
+           else
+             0
            end
-         )
+         end
+       )
   end
 
   defp least_common(head) do
@@ -92,17 +91,16 @@ defmodule Day03P2 do
       head
       |> Enum.reduce([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0], &find_most_common_bit/2)
 
-    bits =
-      bits
-      |> Enum.map(
-           fn count ->
-             if count >= amount / 2 do
-               0
-             else
-               1
-             end
+    bits
+    |> Enum.map(
+         fn count ->
+           if count >= amount / 2 do
+             0
+           else
+             1
            end
-         )
+         end
+       )
   end
 
   defp find_most_common_bit(value, [bits, amount]) do
