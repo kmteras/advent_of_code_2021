@@ -27,9 +27,11 @@ defmodule Day13P2 do
            end
          )
 
-    folds
-    |> Enum.reduce(coords, fn fold, coords -> fold(coords, fold) end)
-    |> Enum.map(fn coord -> IO.puts("#{coord |> elem(0)}\t#{coord |> elem(1)}") end)
+    letter_coords =
+      folds
+      |> Enum.reduce(coords, fn fold, coords -> fold(coords, fold) end)
+
+    IO.puts(coords_to_string(letter_coords))
   end
 
   def fold(coords, fold) do
@@ -61,5 +63,50 @@ defmodule Day13P2 do
            )
         |> MapSet.new()
     end
+  end
+
+  def coords_to_string(letter_coords) do
+    max_x =
+      letter_coords
+      |> Enum.reduce(
+           0,
+           fn {x, _}, max ->
+             if x > max do
+               x
+             else
+               max
+             end
+           end
+         )
+    max_y =
+      letter_coords
+      |> Enum.reduce(
+           0,
+           fn {_, y}, max ->
+             if y > max do
+               y
+             else
+               max
+             end
+           end
+         )
+
+    0..max_y
+    |> Enum.map(
+         fn y ->
+           0..max_x
+           |> Enum.map(
+                fn x ->
+                  if MapSet.member?(letter_coords, {x, y}) do
+                    "X"
+                  else
+                    " "
+                  end
+                end
+              )
+           |> Enum.join("")
+         end
+       )
+    |> Enum.join("\n")
   end
 end
