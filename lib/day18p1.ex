@@ -64,7 +64,7 @@ defmodule Day18P1 do
           steps -> go_split(numbers, steps)
         end
       steps ->
-        {numbers, _} = explode2(numbers, steps)
+        {numbers, _} = explode(numbers, steps)
         numbers
     end
   end
@@ -118,16 +118,16 @@ defmodule Day18P1 do
     end
   end
 
-  defp explode2(numbers, []) do
+  defp explode(numbers, []) do
     {0, numbers}
   end
 
-  defp explode2({left, right} = numbers, path) do
+  defp explode({left, right} = numbers, path) do
     {[step], path} = Enum.split(path, 1)
 
     case step do
       :left ->
-        {left, {lc, rc}} = explode2(left, path)
+        {left, {lc, rc}} = explode(left, path)
 
         carried_right = add_carry_to_right(right, rc)
 
@@ -139,7 +139,7 @@ defmodule Day18P1 do
 
         {{left, carried_right}, {lc, rc}}
       :right ->
-        {right, {lc, rc}} = explode2(right, path)
+        {right, {lc, rc}} = explode(right, path)
 
         carried_left = add_carry_to_left(left, lc)
 
@@ -150,43 +150,6 @@ defmodule Day18P1 do
         end
 
         {{carried_left, right}, {lc, rc}}
-    end
-  end
-
-  defp explode({left, right} = numbers, depth \\ 1) do
-    if depth == 4 do
-      cond do
-        # {1, 1}
-        is_number(left) && is_number(right) -> {{left, right}, {0, 0}}
-
-        # {1, {1, 1}
-        is_number(left) ->
-          {rl, rr} = right
-          {{split(left + rl), 0}, {0, rr}}
-
-        # {{1, 1}, 1}
-        is_number(right) ->
-          {ll, lr} = left
-          {{0, split(right + lr)}, {ll, 0}}
-      end
-    else
-      {left, {llc, rc}} = if is_number(left) do
-        {left, {0, 0}}
-      else
-        explode(left, depth + 1)
-      end
-
-      right = add_carry_to_right(right, rc)
-
-      {right, {lc, rrc}} = if is_number(right) do
-        {right, {0, 0}}
-      else
-        explode(right, depth + 1)
-      end
-
-      left = add_carry_to_left(left, lc)
-
-      {{left, right}, {lc + llc, rc + rrc}}
     end
   end
 
