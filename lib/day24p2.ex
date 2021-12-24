@@ -1,4 +1,4 @@
-defmodule Day24P1 do
+defmodule Day24P2 do
 
   import File, only: [read!: 1]
   import Enum, only: [chunk_every: 2, split: 2, reduce: 3, at: 2]
