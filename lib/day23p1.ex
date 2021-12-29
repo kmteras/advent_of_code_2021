@@ -1,5 +1,10 @@
 defmodule Day23P1 do
 
+  import File, only: [read!: 1]
+  import Enum, only: [chunk_every: 2, split: 2, reduce: 3, at: 2, map: 2, with_index: 1, filter: 2]
+  import String, only: [to_integer: 1]
+  import Map, only: [get: 2, get: 3, put: 3]
+
   @cost %{
     "A" => 1,
     "B" => 10,
@@ -22,10 +27,10 @@ defmodule Day23P1 do
 
     hallway = [nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil]
     pods = [
-      [String.at(Enum.at(lines, 2), 3), String.at(Enum.at(lines, 3), 3)],
-      [String.at(Enum.at(lines, 2), 5), String.at(Enum.at(lines, 3), 5)],
-      [String.at(Enum.at(lines, 2), 7), String.at(Enum.at(lines, 3), 7)],
-      [String.at(Enum.at(lines, 2), 9), String.at(Enum.at(lines, 3), 9)]
+      [String.at(at(lines, 2), 3), String.at(at(lines, 3), 3)],
+      [String.at(at(lines, 2), 5), String.at(at(lines, 3), 5)],
+      [String.at(at(lines, 2), 7), String.at(at(lines, 3), 7)],
+      [String.at(at(lines, 2), 9), String.at(at(lines, 3), 9)]
     ]
 
     step(hallway, pods)
@@ -33,34 +38,43 @@ defmodule Day23P1 do
 
   defp step(hallway, pods, cost \\ 0) do
     IO.inspect({hallway, pods, cost})
-    if is_solved(hallway, pods) do
+    if is_solved(pods) do
       cost
     else
-      0..3
-      |> Enum.reduce(10000000, fn i, sum -> min(sum, move_from_pod(hallway, pods, cost, i, sum)) end)
+      unsolved_pods_indexes = get_movable_pods_indexes(pods)
+
+      pods_to_move = unsolved_pods_indexes ++ [nil]
+
+      reduce(pods_to_move, nil, fn i, sum -> min(sum, move_from_pod(hallway, pods, cost, i, sum)) end)
     end
   end
 
   defp move_from_pod(hallway, pods, cost, i, sum) do
-    {{value, step}, pods} = get_from_pod(pods, i)
-
-    if value == nil do
-      sum
-    else
-      # TODO: Optimize away the places where it cannot go
-      # TODO: Also no movement
+    # No movement into hallway
+    if i == nil do
       [0, 1, 3, 5, 7, 9, 10]
-      |> Enum.reduce(
-           10000000,
-           fn h, sum -> min(sum, move_into_hallway(hallway, pods, cost, i, h, sum, value, step)) end
-         )
-      sum
+      |> reduce(nil, fn from_h, sum -> min(sum, move_into_pod(hallway, pods, cost, from_h)) end)
+    else
+      {{value, step}, pods} = get_from_pod(pods, i)
+
+      if value == nil do
+        sum
+      else
+        # TODO: Optimize away the places where it cannot go
+        # TODO: Also no movement
+        [0, 1, 3, 5, 7, 9, 10]
+        |> reduce(
+             nil,
+             fn h, sum -> min(sum, move_into_hallway(hallway, pods, cost, i, h, sum, value, step)) end
+           )
+        sum
+      end
     end
   end
 
   defp move_into_hallway(hallway, pods, cost, i, h, sum, value, step) do
     # TODO Check if there is anything in the
-    if Enum.at(hallway, h) != nil do
+    if at(hallway, h) != nil do
       sum
     else
       hallway = replace_at(hallway, h, value)
@@ -68,61 +82,85 @@ defmodule Day23P1 do
 
       # TODO: No movement into pod
       [0, 1, 3, 5, 7, 9, 10]
-      |> Enum.reduce(10000000, fn hp, sum -> min(sum, move_into_pod(hallway, pods, cost, i, h, hp)) end)
+      |> reduce(nil, fn from_h, sum -> min(sum, move_into_pod(hallway, pods, cost, from_h)) end)
 
-      step(hallway, pods, cost)
+      #step(hallway, pods, cost)
     end
   end
 
-  defp move_into_pod(hallway, pods, cost, i, h, hp) do
-    if Enum.at(hallway, hp) == nil do
+  defp move_into_pod(hallway, pods, cost, from_h) do
+    if at(hallway, from_h) == nil do
       step(hallway, pods, cost)
     else
-      amphi = Enum.at(hallway, hp)
-      amphi_pod = Map.get(@right_pods, amphi)
+      amphi = at(hallway, from_h)
+      amphi_pod = get(@right_pods, amphi)
 
-      case Enum.at(pods, amphi_pod) do
+      # TODO: Check nothing is in the way
+
+      case at(pods, amphi_pod) do
         [nil, nil] ->
-          hallway = replace_at(hallway, hp, nil)
+          hallway = replace_at(hallway, from_h, nil)
           pods = replace_at(pods, amphi_pod, [nil, amphi])
-          cost = cost
+          cost = cost # TODO
           step(hallway, pods, cost)
 
-        [nil, amphi] ->
-          hallway = replace_at(hallway, hp, nil)
+        [nil, ^amphi] ->
+          hallway = replace_at(hallway, from_h, nil)
           pods = replace_at(pods, amphi_pod, [amphi, amphi])
-          cost = cost
+          cost = cost # TODO
           step(hallway, pods, cost)
 
         _ ->
-          100000000000
-          #step(hallway, pods, cost)
+          nil
       end
     end
   end
 
-  defp is_solved(hallway, pods) do
-    if !Enum.all?(hallway, fn h -> h == nil end) do
-      false
-    else
-      pods == [["A", "A"], ["B", "B"], ["C", "C"], ["D", "D"]]
-    end
+  defp is_solved(pods) do
+    get_unsolved_pods_indexes(pods) == []
+  end
+
+  @index_to_pod %{
+    0 => "A",
+    1 => "B",
+    2 => "C",
+    3 => "D"
+  }
+
+  defp get_movable_pods_indexes(pods) do
+    pods
+    |> with_index()
+    |> filter(fn {pod, index} ->
+      right_amphi = get(@index_to_pod, index)
+      pod != [right_amphi, right_amphi] || pod != [nil, right_amphi] || pod != [nil, nil]
+    end)
+    |> map(fn {pod, index} -> index end)
+  end
+
+  defp get_unsolved_pods_indexes(pods) do
+    pods
+    |> with_index()
+    |> filter(fn {pod, index} ->
+      right_amphi = get(@index_to_pod, index)
+      pod != [right_amphi, right_amphi]
+    end)
+    |> map(fn {pod, index} -> index end)
   end
 
   defp get_cost(amphipod, steps, pod_index, hallway_index) do
-    Map.get(@cost, amphipod) * (steps + abs(hallway_index - (pod_index * 2 + 2)))
+    get(@cost, amphipod) * (steps + abs(hallway_index - (pod_index * 2 + 2)))
   end
 
   defp get_from_pod(pods, pod_index) do
-    pod = Enum.at(pods, pod_index)
+    pod = at(pods, pod_index)
 
-    if Enum.at(pod, 0) == nil do
-      if Enum.at(pod, 1) == nil do
+    if at(pod, 0) == nil do
+      if at(pod, 1) == nil do
         {{nil, 0}, pods}
       else
-        value = Enum.at(pod, 1)
+        value = at(pod, 1)
 
-        if pod_index == Map.get(@right_pods, value) do
+        if pod_index == get(@right_pods, value) do
           {{nil, 0}, pods}
         else
           pods = replace_at(pods, pod_index, [nil, nil])
@@ -131,16 +169,16 @@ defmodule Day23P1 do
         end
       end
     else
-      value = Enum.at(pod, 0)
-      pods = replace_at(pods, pod_index, [nil, Enum.at(pod, 1)])
+      value = at(pod, 0)
+      pods = replace_at(pods, pod_index, [nil, at(pod, 1)])
       {{value, 1}, pods}
     end
   end
 
   defp replace_at(enum, i, v) do
     enum
-    |> Enum.with_index()
-    |> Enum.map(
+    |> with_index()
+    |> map(
          fn {value, index} ->
            if index == i do
              v
