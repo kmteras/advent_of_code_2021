@@ -1,7 +1,7 @@
 defmodule Day24P1 do
 
   import File, only: [read!: 1]
-  import Enum, only: [chunk_every: 2, split: 2, reduce: 3, at: 2]
+  import Enum, only: [chunk_every: 2, reduce: 3, at: 2]
   import String, only: [to_integer: 1]
 
   def solve(filename) do
@@ -15,11 +15,9 @@ defmodule Day24P1 do
   defp run(instructions, z \\ 0, num \\ 0)
   defp run([], _, num), do: num
 
-  defp run(instructions, z, num) do
-    {[ins], instructions} = split(instructions, 1)
-
+  defp run([ins | instructions], z, num) do
     reduce(
-      1..9,
+      9..1,
       nil,
       fn i, found ->
         if found do
